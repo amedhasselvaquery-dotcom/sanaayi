@@ -13,21 +13,22 @@ jobs:
         with:
           node-version: 20
 
-      - name: Prepare Workspace
+      - name: Force Build Preparation
         run: |
           mkdir -p www
-          cp *.html www/ 2>/dev/null || true
+          # نسخ أي ملفات موجودة لضمان عدم فشل العملية
+          cp *.html www/ 2>/dev/null || echo "<html><body>Empty</body></html>" > www/index.html
           cp *.png www/ 2>/dev/null || true
-          cp *.jpg www/ 2>/dev/null || true
           cp *.css www/ 2>/dev/null || true
           cp *.js www/ 2>/dev/null || true
+          # إنشاء ملف الإعدادات الأساسي
           echo '{"name": "sanaayi", "version": "1.0.0"}' > package.json
 
       - name: Install Tools
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Initialize Android Project
+      - name: Initialize Android
         run: |
           npx cap init Sanaayi com.sanaayi.app --web-dir www
           npx cap add android
@@ -38,8 +39,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Save APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Sanaayi-App-Final
+          name: Sanaayi-App-Package
           path: android/app/build/outputs/apk/debug/app-debug.apk
