@@ -19,38 +19,31 @@ jobs:
         with:
           node-version: 20
 
-      - name: System Preparation
+      - name: Build Preparation
         run: |
           mkdir -p www
-          if [ ! -f index.html ]; then
-            echo "<html><body><h1>Sanaayi App</h1></body></html>" > www/index.html
-          else
-            cp -r *.html www/ 2>/dev/null || true
-          fi
-          cp -r *.css www/ 2>/dev/null || true
-          cp -r *.js www/ 2>/dev/null || true
-          cp -r *.png www/ 2>/dev/null || true
+          [ -f index.html ] && cp index.html www/ || echo "<html><body>Sanaayi</body></html>" > www/index.html
+          cp *.css www/ 2>/dev/null || true
+          cp *.js www/ 2>/dev/null || true
           echo '{"name": "sanaayi", "version": "1.0.0"}' > package.json
 
-      - name: Install Capacitor
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+      - name: Install Tools
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Build Android Project
+      - name: Create Android Project
         run: |
           npx cap init Sanaayi com.sanaayi.app --web-dir www
           npx cap add android
+          npx cap copy android
 
-      - name: Gradle Permissions
-        run: chmod +x android/gradlew
-
-      - name: Build Debug APK
+      - name: Build Final APK
         run: |
           cd android
-          ./gradlew assembleDebug
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
 
-      - name: Upload Final APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Sanaayi-Ready-APK
+          name: Sanaayi-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
