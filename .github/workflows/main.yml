@@ -1,0 +1,45 @@
+name: Build Android APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Prepare Workspace
+        run: |
+          mkdir -p www
+          cp *.html www/ 2>/dev/null || true
+          cp *.png www/ 2>/dev/null || true
+          cp *.jpg www/ 2>/dev/null || true
+          cp *.css www/ 2>/dev/null || true
+          cp *.js www/ 2>/dev/null || true
+          echo '{"name": "sanaayi", "version": "1.0.0"}' > package.json
+
+      - name: Install Tools
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Initialize Android Project
+        run: |
+          npx cap init Sanaayi com.sanaayi.app --web-dir www
+          npx cap add android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Save APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: Sanaayi-App-Final
+          path: android/app/build/outputs/apk/debug/app-debug.apk
