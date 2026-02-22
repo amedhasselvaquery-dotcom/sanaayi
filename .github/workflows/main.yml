@@ -19,31 +19,30 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build Preparation
+      - name: Prepare Files
         run: |
           mkdir -p www
-          [ -f index.html ] && cp index.html www/ || echo "<html><body>Sanaayi</body></html>" > www/index.html
+          cp *.html www/ 2>/dev/null || echo "<html><body>App</body></html>" > www/index.html
           cp *.css www/ 2>/dev/null || true
           cp *.js www/ 2>/dev/null || true
           echo '{"name": "sanaayi", "version": "1.0.0"}' > package.json
 
-      - name: Install Tools
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Create Android Project
+      - name: Install & Sync
         run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init Sanaayi com.sanaayi.app --web-dir www
           npx cap add android
-          npx cap copy android
+          npx cap sync android
 
-      - name: Build Final APK
+      - name: Final Build
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew clean
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Export APK
         uses: actions/upload-artifact@v4
         with:
-          name: Sanaayi-App
+          name: Sanaayi-Final-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
